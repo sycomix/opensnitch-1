@@ -12,7 +12,9 @@ from PyQt5 import QtCore, QtGui, uic, QtWidgets
 import ui_pb2
 from version import version
 
-DIALOG_UI_PATH = "%s/../res/stats.ui" % os.path.dirname(sys.modules[__name__].__file__)
+DIALOG_UI_PATH = (
+    f"{os.path.dirname(sys.modules[__name__].__file__)}/../res/stats.ui"
+)
 class StatsDialog(QtWidgets.QDialog, uic.loadUiType(DIALOG_UI_PATH)[0]):
     RED = QtGui.QColor(0xff, 0x63, 0x47)
     GREEN = QtGui.QColor(0x2e, 0x90, 0x59)
@@ -50,7 +52,7 @@ class StatsDialog(QtWidgets.QDialog, uic.loadUiType(DIALOG_UI_PATH)[0]):
         self._procs_table = self._setup_table("procsTable", ("Executable", "Connections"))
 
         self._tables = ( \
-            self._events_table,
+                self._events_table,
             self._hosts_table,
             self._procs_table,
             self._addrs_table,
@@ -58,7 +60,7 @@ class StatsDialog(QtWidgets.QDialog, uic.loadUiType(DIALOG_UI_PATH)[0]):
             self._users_table
         )
         self._file_names = ( \
-            'events.csv',
+                'events.csv',
             'hosts.csv',
             'procs.csv',
             'addrs.csv',
@@ -67,7 +69,7 @@ class StatsDialog(QtWidgets.QDialog, uic.loadUiType(DIALOG_UI_PATH)[0]):
         )
 
         if address is not None:
-            self.setWindowapply_Title("OpenSnitch Network Statistics for %s" % address)
+            self.setWindowapply_Title(f"OpenSnitch Network Statistics for {address}")
 
     def update(self, stats=None):
         with self._lock:
@@ -89,19 +91,13 @@ class StatsDialog(QtWidgets.QDialog, uic.loadUiType(DIALOG_UI_PATH)[0]):
             table = self._tables[tab_idx]
             ncols = table.columnCount()
             nrows = table.rowCount()
-            cols = []
-
-            for col in range(0, ncols):
-                cols.append(table.horizontalHeaderItem(col).text())
-
+            cols = [table.horizontalHeaderItem(col).text() for col in range(0, ncols)]
             with open(filename, 'w') as csvfile:
                 w = csv.writer(csvfile, dialect='excel')
                 w.writerow(cols)
-                
+
                 for row in range(0, nrows):
-                    values = []
-                    for col in range(0, ncols):
-                        values.append(table.item(row, col).text())
+                    values = [table.item(row, col).text() for col in range(0, ncols)]
                     w.writerow(values)
 
     def _setup_table(self, name, columns):
@@ -135,7 +131,7 @@ class StatsDialog(QtWidgets.QDialog, uic.loadUiType(DIALOG_UI_PATH)[0]):
             item.setFlags( QtCore.Qt.ItemIsSelectable |  QtCore.Qt.ItemIsEnabled )
             table.setItem(row, 0, item)
 
-            item = QtWidgets.QTableWidgetItem("%s" % hits)
+            item = QtWidgets.QTableWidgetItem(f"{hits}")
             item.setFlags( QtCore.Qt.ItemIsSelectable |  QtCore.Qt.ItemIsEnabled )
             table.setItem(row, 1, item)
 
@@ -160,9 +156,9 @@ class StatsDialog(QtWidgets.QDialog, uic.loadUiType(DIALOG_UI_PATH)[0]):
             item.setFlags( QtCore.Qt.ItemIsSelectable |  QtCore.Qt.ItemIsEnabled )
             self._events_table.setItem(row, 2, item)
 
-            item = QtWidgets.QTableWidgetItem( "%s:%s" % ( \
-                    event.connection.dst_host if event.connection.dst_host != "" else event.connection.dst_ip, 
-                    event.connection.dst_port ))
+            item = QtWidgets.QTableWidgetItem(
+                f'{event.connection.dst_host if event.connection.dst_host != "" else event.connection.dst_ip}:{event.connection.dst_port}'
+            )
             item.setFlags( QtCore.Qt.ItemIsSelectable |  QtCore.Qt.ItemIsEnabled )
             self._events_table.setItem(row, 3, item)
 
@@ -192,9 +188,9 @@ class StatsDialog(QtWidgets.QDialog, uic.loadUiType(DIALOG_UI_PATH)[0]):
         else:
             self._version_label.setText(self._stats.daemon_version)
             self._uptime_label.setText(str(datetime.timedelta(seconds=self._stats.uptime)))
-            self._rules_label.setText("%s" % self._stats.rules)
-            self._cons_label.setText("%s" % self._stats.connections)
-            self._dropped_label.setText("%s" % self._stats.dropped)
+            self._rules_label.setText(f"{self._stats.rules}")
+            self._cons_label.setText(f"{self._stats.connections}")
+            self._dropped_label.setText(f"{self._stats.dropped}")
 
             self._render_events_table()
 
@@ -208,7 +204,7 @@ class StatsDialog(QtWidgets.QDialog, uic.loadUiType(DIALOG_UI_PATH)[0]):
                     except Exception:
                         pw_name = "error"
                     finally:
-                        by_users["%s (%s)" % (pw_name, uid)] = hits
+                        by_users[f"{pw_name} ({uid})"] = hits
             else:
                 by_users = self._stats.by_uid
 
@@ -228,5 +224,5 @@ class StatsDialog(QtWidgets.QDialog, uic.loadUiType(DIALOG_UI_PATH)[0]):
 
     # https://gis.stackexchange.com/questions/86398/how-to-disable-the-escape-key-for-a-dialog
     def keyPressEvent(self, event):
-        if not event.key() == QtCore.Qt.Key_Escape:
+        if event.key() != QtCore.Qt.Key_Escape:
             super(StatsDialog, self).keyPressEvent(event)

@@ -15,7 +15,9 @@ from version import version
 
 import ui_pb2
 
-DIALOG_UI_PATH = "%s/../res/prompt.ui" % os.path.dirname(sys.modules[__name__].__file__)
+DIALOG_UI_PATH = (
+    f"{os.path.dirname(sys.modules[__name__].__file__)}/../res/prompt.ui"
+)
 class PromptDialog(QtWidgets.QDialog, uic.loadUiType(DIALOG_UI_PATH)[0]):
     _prompt_trigger = QtCore.pyqtSignal()
     _tick_trigger = QtCore.pyqtSignal()
@@ -26,7 +28,7 @@ class PromptDialog(QtWidgets.QDialog, uic.loadUiType(DIALOG_UI_PATH)[0]):
 
         self.setupUi(self)
 
-        self.setWindowTitle("OpenSnitch v%s" % version)
+        self.setWindowTitle(f"OpenSnitch v{version}")
 
         self._cfg = Config.get()
         self._lock = threading.Lock()
@@ -119,13 +121,13 @@ class PromptDialog(QtWidgets.QDialog, uic.loadUiType(DIALOG_UI_PATH)[0]):
 
         if self._local:
             message = "<b>%s</b> is connecting to <b>%s</b> on %s port %d" % ( \
-                        app_name,
+                            app_name,
                         con.dst_host or con.dst_ip,
                         con.protocol,
                         con.dst_port )
         else:
             message = "The process <b>%s</b> running on the computer <b>%s</b> is connecting to <b>%s</b> on %s port %d" % ( \
-                        app_name,
+                            app_name,
                         self._peer.split(':')[1],
                         con.dst_host or con.dst_ip,
                         con.protocol,
@@ -142,20 +144,20 @@ class PromptDialog(QtWidgets.QDialog, uic.loadUiType(DIALOG_UI_PATH)[0]):
             uid = "%d" % con.user_id
 
         self._uid_label.setText(uid)
-        self._pid_label.setText("%s" % con.process_id)
+        self._pid_label.setText(f"{con.process_id}")
         self._args_label.setText(' '.join(con.process_args))
 
         self._what_combo.clear()
         self._what_combo.addItem("from this process")
         self._what_combo.addItem("from user %d" % con.user_id)
         self._what_combo.addItem("to port %d" % con.dst_port)
-        self._what_combo.addItem("to %s" % con.dst_ip)
+        self._what_combo.addItem(f"to {con.dst_ip}")
         if con.dst_host != "":
-            self._what_combo.addItem("to %s" % con.dst_host)
+            self._what_combo.addItem(f"to {con.dst_host}")
             parts = con.dst_host.split('.')[1:]
             nparts = len(parts)
             for i in range(0, nparts - 1):
-                self._what_combo.addItem("to *.%s" % '.'.join(parts[i:]))
+                self._what_combo.addItem(f"to *.{'.'.join(parts[i:])}")
 
         if self._cfg.default_action == "allow":
             self._action_combo.setCurrentIndex(0)
@@ -177,7 +179,7 @@ class PromptDialog(QtWidgets.QDialog, uic.loadUiType(DIALOG_UI_PATH)[0]):
 
     # https://gis.stackexchange.com/questions/86398/how-to-disable-the-escape-key-for-a-dialog
     def keyPressEvent(self, event):
-        if not event.key() == QtCore.Qt.Key_Escape:
+        if event.key() != QtCore.Qt.Key_Escape:
             super(PromptDialog, self).keyPressEvent(event)
 
     # prevent a click on the window's x 
@@ -190,11 +192,7 @@ class PromptDialog(QtWidgets.QDialog, uic.loadUiType(DIALOG_UI_PATH)[0]):
         self._rule = ui_pb2.Rule(name="user.choice")
 
         action_idx = self._action_combo.currentIndex()
-        if action_idx == 0:
-            self._rule.action = "allow"
-        else:
-            self._rule.action = "deny"
-
+        self._rule.action = "allow" if action_idx == 0 else "deny"
         duration_idx = self._duration_combo.currentIndex()
         if duration_idx == 0:
             self._rule.duration = "once"
@@ -212,18 +210,18 @@ class PromptDialog(QtWidgets.QDialog, uic.loadUiType(DIALOG_UI_PATH)[0]):
         elif what_idx == 1:
             self._rule.operator.type = "simple"
             self._rule.operator.operand = "user.id"
-            self._rule.operator.data = "%s" % self._con.user_id 
-        
+            self._rule.operator.data = f"{self._con.user_id}" 
+
         elif what_idx == 2:
             self._rule.operator.type = "simple"
             self._rule.operator.operand = "dest.port"
-            self._rule.operator.data = "%s" % self._con.dst_port 
+            self._rule.operator.data = f"{self._con.dst_port}" 
 
         elif what_idx == 3:
             self._rule.operator.type = "simple"
             self._rule.operator.operand = "dest.ip"
             self._rule.operator.data = self._con.dst_ip 
-        
+
         elif what_idx == 4:
             self._rule.operator.type = "simple"
             self._rule.operator.operand = "dest.host"
@@ -234,8 +232,10 @@ class PromptDialog(QtWidgets.QDialog, uic.loadUiType(DIALOG_UI_PATH)[0]):
             self._rule.operator.operand = "dest.host"
             self._rule.operator.data = ".*\.%s" % '\.'.join(self._con.dst_host.split('.')[what_idx - 4:])
 
-        self._rule.name = slugify("%s %s %s" % (self._rule.action, self._rule.operator.type, self._rule.operator.data))
-        
+        self._rule.name = slugify(
+            f"{self._rule.action} {self._rule.operator.type} {self._rule.operator.data}"
+        )
+
         self.hide()
         # signal that the user took a decision and 
         # a new rule is available

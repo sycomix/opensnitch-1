@@ -7,10 +7,10 @@ import os
 import re
 import shutil
 
-DESKTOP_PATHS = tuple([
+DESKTOP_PATHS = tuple(
     os.path.join(d, 'applications')
     for d in os.getenv('XDG_DATA_DIRS', '/usr/share/').split(':')
-])
+)
 
 class LinuxDesktopParser(threading.Thread):
     def __init__(self):

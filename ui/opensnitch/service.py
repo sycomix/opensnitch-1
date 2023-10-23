@@ -133,7 +133,7 @@ class UIService(ui_pb2_grpc.UIServicer, QtWidgets.QGraphicsObject):
         dialog.update(stats)
         self._remote_stats[addr] = dialog
 
-        new_act = self._menu.addAction("%s Statistics" % addr)
+        new_act = self._menu.addAction(f"{addr} Statistics")
         new_act.triggered.connect(lambda: self._on_remote_stats_menu(addr))
         self._menu.insertAction(self._stats_action, new_act)
         self._stats_action.setText("Local Statistics")
@@ -149,12 +149,8 @@ class UIService(ui_pb2_grpc.UIServicer, QtWidgets.QGraphicsObject):
             time.sleep(1)
 
             # we didn't see any daemon so far ...
-            if self._last_ping is None:
+            if self._last_ping is None or self._asking is True:
                 continue
-            # a prompt is being shown, ping is on pause
-            elif self._asking is True:
-                continue
-
             # the daemon will ping the ui every second
             # we expect a 3 seconds delay -at most-
             time_not_seen = datetime.now() - self._last_ping

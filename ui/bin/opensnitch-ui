@@ -32,7 +32,7 @@ if __name__ == '__main__':
     parser.add_argument("--config", dest="config", default="~/.opensnitch/ui-config.json", help="Path of the UI json configuration file.", metavar="FILE")
 
     args = parser.parse_args()
-    
+
     os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
     app = QtWidgets.QApplication(sys.argv)
     app.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
@@ -41,11 +41,11 @@ if __name__ == '__main__':
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=4))
 
     add_UIServicer_to_server(service, server)
-    
+
     if args.socket.startswith("unix://"):
         socket = args.socket[7:]
         socket = os.path.abspath(socket)
-        server.add_insecure_port("unix:%s" % socket)
+        server.add_insecure_port(f"unix:{socket}")
     else:
         server.add_insecure_port(args.socket)
 
